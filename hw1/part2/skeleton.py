@@ -1,7 +1,7 @@
 import ply.lex as lex
 import ply.yacc as yacc
 
-tokens = ['CHARACTER', 'UNION', 'DOT', 'STAR', 'OPEN_PAREN', 'CLOSE_PAREN']
+tokens = ['CHARACTER', 'UNION', 'DOT', 'STAR', 'OPEN_PAREN', 'CLOSE_PAREN', "QUESTION"]
 
 # characters we will support in our regex
 t_CHARACTER = '[a-zA-Z0-9]'
@@ -12,6 +12,7 @@ t_DOT = '\.'
 t_STAR = '\*'
 t_OPEN_PAREN = '\('
 t_CLOSE_PAREN = '\)'
+t_QUESTION = '\?'
 
 # Ignore spaces
 t_ignore = ' '
@@ -197,20 +198,24 @@ def p_re_recusive(p):
     p[0] = mk_union(p[1], p[3])
 
 def p_concat_single(p):
-    'concat : starred'
+    'concat : base'
     p[0] = p[1]
 
 def p_concat_recusive(p):
-    'concat : starred DOT concat'
+    'concat : base DOT concat'
     p[0] = mk_concat(p[1], p[3])
 
 def p_base_singleton(p):
-    'starred : paren'
+    'base : paren'
     p[0] = p[1]
 
-def p_base_recursive(p):
-    'starred : starred STAR'
+def p_base_star_recursive(p):
+    'base : base STAR'
     p[0] = mk_star(p[1])
+
+def p_base_optional_recursive(p):
+    'base : base QUESTION'
+    p[0] = mk_union(p[1], mk_epsilon())
 
 def p_paren_singleton(p):
     'paren : symbol'
@@ -237,16 +242,17 @@ def match_regex(reg_ex, string):
 
 # Use this conditional to test your script locally
 if __name__ == "__main__":
-    d_re = parser.parse("(h.i)* | c.s.e*.2.1.1")
+    d_re = parser.parse("(h.i)? | c.s.e*.2.1.1")
 
     # should pass
+    print(parse_re(d_re, "") == True)
     print(parse_re(d_re, "hi") == True)    
-    print(parse_re(d_re, "hihi") == True)
     print(parse_re(d_re, "cse211") == True)
     print(parse_re(d_re, "cs211") == True)
     print(parse_re(d_re, "cseee211") == True)
 
     # should fail
+    print(parse_re(d_re, "hihi") == False)
     print(parse_re(d_re, "hhh") == False)
     print(parse_re(d_re, "cseee21") == False)
     print(parse_re(d_re, "211") == False)

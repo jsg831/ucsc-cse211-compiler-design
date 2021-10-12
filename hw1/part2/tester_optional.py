@@ -12,7 +12,17 @@ tests = [("z?", "z", True),
          ("e.x.c.i.t.e.(m.e.n.t)? | c.a.r.s?", "excite", True),
          ("e.x.c.i.t.e.(m.e.n.t)? | c.a.r.s?", "excitement", True),
          ("e.x.c.i.t.e.(m.e.n.t)? | c.a.r.s?", "car", True),
-         ("e.x.c.i.t.e.(m.e.n.t)? | c.a.r.s?", "cars", True)]
+         ("e.x.c.i.t.e.(m.e.n.t)? | c.a.r.s?", "cars", True),
+         ("((a*|b*).(c?|d*)).e?", "aace", True),
+         ("((a*|b*).(c?|d*)).e?", "bbbcc", False),
+         ("((a*|b*).(c?|d*)).e?", "bc", True),
+         ("((a*|b*).(c?|d*)).e?", "ab", False),
+         ("((a*|b*).(c?|d*)).e?", "c", True),
+         ("((a*|b*).(c?|d*)).e?", "d", True),
+         ("((a*|b*).(c?|d*)).e?", "b", True),
+         ("((a*|b*).(c?|d*)).e?", "ee", False),
+         ("((a*|b*).(c?|d*)).e?", "", True)
+         ]
 
 failed = 0
 total = len(tests)

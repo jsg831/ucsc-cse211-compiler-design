@@ -22,7 +22,13 @@ tests = [("z", "z", True),
          ("u.c.s.c*|s.l.u.g.s|c.s*.e", "slug", False),
          ("u.c.s.c*|s.l.u.g.s|c.s*.e", "slugs", True),
          ("u.c.s.c*|s.l.u.g.s|c.s*.e", "ucs", True),
-         ("u.c.s.c*|s.l.u.g.s|c.s*.e", "ucslugs", False)]
+         ("u.c.s.c*|s.l.u.g.s|c.s*.e", "ucslugs", False),
+         ("((a*|b*).(c*.d|d*)).e", "acde", True),
+         ("((a*|b*).(c*.d|d*)).e", "aaaddde", True),
+         ("((a*|b*).(c*.d|d*)).e", "acdde", False),
+         ("((a*|b*).(c*.d|d*)).e", "acd", False),
+         ("((a*|b*).(c*.d|d*)).e", "abde", False)
+         ]
 
 failed = 0
 total = len(tests)
