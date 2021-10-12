@@ -161,6 +161,7 @@ def derivative_re_union(char, re):
 # Homework step 2: Implement this function.
 # Returns the derivative of a STAR re with respect to char
 def derivative_re_star(char, re):
+    # Example: derivative("a", "(a.b.c)*") -> "(b.c).(a.b.c)*"
     return mk_concat(derivative_re(char, re.lhs), re)
 
 # Homework step 3: Implement this function. Recall that the nullable
@@ -168,6 +169,8 @@ def derivative_re_star(char, re):
 # bigger RE.
 # Returns the derivative of a CONCAT re with respect to char
 def derivative_re_concat(char, re):
+    # Case 1: LHS is not nullable ->            derivative of LHS <concat> RHS
+    # Case 2: LHS is     nullable -> UNION with derivative of RHS
     return mk_union(
         mk_concat(derivative_re(char, re.lhs), re.rhs),
         mk_concat(nullable(re.lhs), derivative_re(char, re.rhs))
@@ -215,6 +218,7 @@ def p_base_star_recursive(p):
 
 def p_base_optional_recursive(p):
     'base : base QUESTION'
+    # "(<re>)? := (<re> | <empty_string>)"
     p[0] = mk_union(p[1], mk_epsilon())
 
 def p_paren_singleton(p):
