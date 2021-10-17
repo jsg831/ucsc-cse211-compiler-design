@@ -17,8 +17,9 @@ class SymbolTable:
         # "_st" is the internal data structure for the array of dictionaries
         self._st = [{}]
     
-    def insert(self,name,value):
+    def insert(self, name, value):
         # New variables belong to the top dictionary
+        #print("Assign {} = {}".format(name, value))
         self._st[-1][name] = value
 
     def lookup(self, name):
@@ -26,7 +27,7 @@ class SymbolTable:
         # (Closest scope first)
         for i in range(len(self._st)):
             value = self._st[-1-i].get(name)
-            if value:
+            if value is not None:
                 return value
         #print("Variable '{}' is not defined".format(name))
         raise SymbolTableException

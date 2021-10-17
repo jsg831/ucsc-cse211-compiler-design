@@ -22,6 +22,18 @@ valid_test_cases = {
     print(y);
     """ : [-5,3],
 
+    # Test - Numeric Values
+    """
+    a = 0;
+    print(a);
+    a = 0.1;
+    print(a);
+    a = 1.1;
+    print(a);
+    a = 12.345;
+    print(a);
+    """ : [0, 0.1, 1.1, 12.345],
+
     # Test - Operator Precedence
     """
     a = 1;
