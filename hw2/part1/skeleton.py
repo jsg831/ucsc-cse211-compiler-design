@@ -272,7 +272,6 @@ def replace_redundant_part3(input_block):
         if signature in signature_to_var and signature_to_var[signature].get_number() == name_to_number[signature_to_var[signature].get_name()]:
             replaced_instructions += 1
             return_block.add_instruction(AssignmentInstr(lhs, signature_to_var[signature]))
-            print(" [3] --> {} --> {} = {}".format(instr.pprint(), lhs.pprint(), signature_to_var[signature].pprint()))
         else:
             return_block.add_instruction(instr)
             signature_to_var[signature] = lhs
@@ -336,7 +335,6 @@ def replace_redundant_part4(input_block):
             replaced_instructions += 1
             alias_name = next(iter(signature_to_name_set[signature]))
             return_block.add_instruction(AssignmentInstr(lhs, Variable(alias_name, name_to_number[alias_name])))
-            print(" [4] --> {} --> {} = {}{}".format(instr.pprint(), lhs.pprint(), alias_name, name_to_number[alias_name]))
         else:
             return_block.add_instruction(instr)
         
