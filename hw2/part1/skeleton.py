@@ -1,5 +1,7 @@
 # skeleton file for UCSC CSE211 Homework 2: part 1
 
+from collections import defaultdict
+
 # Variable class: contains a name and an optional number
 class Variable:
     def __init__(self, name, number=None):
@@ -158,23 +160,24 @@ def replace_redundant_part1(input_block):
 
     # increment every time an arithmetic instruction is replaced
     replaced_instructions = 0
-    for instr in input_block.instruction_list():
 
-        # You can assume only arithmetic operations        
+    # Signature -> Assigned Variable
+    signature_to_var = {}
+
+    for instr in input_block.instruction_list():
         lhs    = instr.lhs # a variable on the lhs of the assignment
         op1    = instr.op1 # the first operand 
         op     = instr.op  # the operator; one of ('+', '-', '*', '/')
         op2    = instr.op2 # the seecond operand
+        
+        signature = op1.pprint() + op + op2.pprint()
 
-        # You can access names and numbers of the variables with, e.g.:
-        # op1.get_name()
-        # op1.get_number()
-
-        # Determine if the instruction can be replaced, if not you
-        # should simply add the original instruction to the return_block
-
-        # you can create an assignment instruction with the constructor:        # new_instr = AssignmentInstr(lhs_variable, rhs_variable)       
-        return_block.add_instruction(instr)
+        if signature in signature_to_var:
+            replaced_instructions += 1
+            return_block.add_instruction(AssignmentInstr(lhs, signature_to_var[signature]))
+        else:
+            return_block.add_instruction(instr)
+            signature_to_var[signature] = lhs
         
     return return_block, replaced_instructions
 
@@ -198,24 +201,26 @@ def replace_redundant_part2(input_block):
 
     # increment every time an arithmetic instruction is replaced
     replaced_instructions = 0
-    for instr in input_block.instruction_list():
+    
+    # Signature -> Assigned Variable
+    signature_to_var = {}
 
-        # You can assume only arithmetic operations        
+    for instr in input_block.instruction_list():
         lhs    = instr.lhs # a variable on the lhs of the assignment
         op1    = instr.op1 # the first operand 
         op     = instr.op  # the operator; one of ('+', '-', '*', '/')
         op2    = instr.op2 # the seecond operand
 
-        # You can access names and numbers of the variables with, e.g.:
-        # op1.get_name()
-        # op1.get_number()
+        # Sort op1 and op2 by numbers if the operator is commutative (+ or *)
+        (op1, op2) = (op1, op2) if op1.get_number() < op2.get_number() or op not in ['+', '*'] else (op2, op1)
+        signature = op1.pprint() + op + op2.pprint()
 
-        # Determine if the instruction can be replaced, if not you
-        # should simply add the original instruction to the return_block
-
-        # you can create an assignment instruction with the constructor:        # new_instr = AssignmentInstr(lhs_variable, rhs_variable)       
-
-        return_block.add_instruction(instr)
+        if signature in signature_to_var:
+            replaced_instructions += 1
+            return_block.add_instruction(AssignmentInstr(lhs, signature_to_var[signature]))
+        else:
+            return_block.add_instruction(instr)
+            signature_to_var[signature] = lhs
         
     return return_block, replaced_instructions
 
@@ -247,24 +252,32 @@ def replace_redundant_part3(input_block):
 
     # increment every time an arithmetic instruction is replaced
     replaced_instructions = 0
-    for instr in input_block.instruction_list():
+    
+    # Signature -> Assigned Variable
+    signature_to_var = {}
 
-        # You can assume only arithmetic operations        
+    # Variable Name -> Most Recent Number
+    name_to_number = {}
+
+    for instr in input_block.instruction_list():
         lhs    = instr.lhs # a variable on the lhs of the assignment
         op1    = instr.op1 # the first operand 
         op     = instr.op  # the operator; one of ('+', '-', '*', '/')
         op2    = instr.op2 # the seecond operand
 
-        # You can access names and numbers of the variables with, e.g.:
-        # op1.get_name()
-        # op1.get_number()
+        # Sort op1 and op2 by numbers if the operator is commutative (+ or *)
+        (op1, op2) = (op1, op2) if op1.get_number() < op2.get_number() or op not in ['+', '*'] else (op2, op1)
+        signature = op1.pprint() + op + op2.pprint()
 
-        # Determine if the instruction can be replaced, if not you
-        # should simply add the original instruction to the return_block
+        if signature in signature_to_var and signature_to_var[signature].get_number() == name_to_number[signature_to_var[signature].get_name()]:
+            replaced_instructions += 1
+            return_block.add_instruction(AssignmentInstr(lhs, signature_to_var[signature]))
+            print(" [3] --> {} --> {} = {}".format(instr.pprint(), lhs.pprint(), signature_to_var[signature].pprint()))
+        else:
+            return_block.add_instruction(instr)
+            signature_to_var[signature] = lhs
 
-        # you can create an assignment instruction with the constructor:        # new_instr = AssignmentInstr(lhs_variable, rhs_variable)       
-
-        return_block.add_instruction(instr)
+        name_to_number[lhs.get_name()] = lhs.get_number()
         
     return return_block, replaced_instructions
 
@@ -294,6 +307,14 @@ def replace_redundant_part4(input_block):
 
     # increment every time an arithmetic instruction is replaced
     replaced_instructions = 0
+    
+    # Signature -> Assigned Variable "Name Set"
+    signature_to_name_set = defaultdict(lambda: set())
+
+    # Variable Name -> Most Recent Signature
+    name_to_signature = {}
+    name_to_number = {}
+
     for instr in input_block.instruction_list():
 
         # You can assume only arithmetic operations        
@@ -305,12 +326,25 @@ def replace_redundant_part4(input_block):
         # You can access names and numbers of the variables with, e.g.:
         # op1.get_name()
         # op1.get_number()
+        (op1, op2) = (op1, op2) if op1.get_number() < op2.get_number() or op not in ['+', '*'] else (op2, op1)
+        signature = op1.pprint() + op + op2.pprint()
 
         # Determine if the instruction can be replaced, if not you
         # should simply add the original instruction to the return_block
-
         # you can create an assignment instruction with the constructor:        # new_instr = AssignmentInstr(lhs_variable, rhs_variable)       
-        return_block.add_instruction(instr)
+        if len(signature_to_name_set[signature]):
+            replaced_instructions += 1
+            alias_name = next(iter(signature_to_name_set[signature]))
+            return_block.add_instruction(AssignmentInstr(lhs, Variable(alias_name, name_to_number[alias_name])))
+            print(" [4] --> {} --> {} = {}{}".format(instr.pprint(), lhs.pprint(), alias_name, name_to_number[alias_name]))
+        else:
+            return_block.add_instruction(instr)
+        
+        if lhs.get_name() in name_to_signature:
+            signature_to_name_set[name_to_signature[lhs.get_name()]].remove(lhs.get_name())
+        name_to_signature[lhs.get_name()] = signature
+        name_to_number[lhs.get_name()] = lhs.get_number()
+        signature_to_name_set[signature].add(lhs.get_name())
         
     return return_block, replaced_instructions
 
