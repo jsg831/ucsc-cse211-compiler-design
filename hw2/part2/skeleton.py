@@ -112,6 +112,8 @@ def compute_UEVar(CFG):
     UEVar = {}
 
     # Homework: implement this function.
+    for n in CFG.nodes():
+        UEVar[n] = reads_var(get_node_instruction(n))
         
     return UEVar
 
@@ -122,7 +124,9 @@ def compute_VarKill(CFG):
     VarKill = {}
 
     # Homework: implement this function.
-    
+    for n in CFG.nodes():
+        VarKill[n] = writes_var(get_node_instruction(n))
+
     return VarKill
 
 # iteratively compute LiveOut
@@ -137,8 +141,87 @@ def compute_LiveOut(CFG, UEVar, VarKill, VarDomain):
     LiveOut = {}
 
     # Homework: implement this function.
-        
+
+    # Types of order:
+    #   "default"  : node number 0,1,2,3,...
+    #   "rpo"      : reverse post-order on CFG (essentially BFS on CFG)
+    #   "rpo_rcfg" : reverse post-order on reverse CFG (essentially BFS on reverse CFG)
+
+    order = 'rpo_rcfg'
+
+    if order == 'default':
+        nodes = CFG.nodes()
+    elif order == 'rpo':
+        nodes = []
+        visited = set({})
+        queue = [CFG.get_node(0)]
+        while len(queue):
+            n = queue.pop()
+            nodes.append(n)
+            visited.add(n)
+            for m in get_node_successors(CFG, n):
+                if m not in visited:
+                    queue.append(m)
+    elif order == 'rpo_rcfg':
+        nodes = []
+        visited = set({})
+        queue = [CFG.get_node(len(CFG.nodes())-1)]
+        while len(queue):
+            n = queue.pop()
+            nodes.append(n)
+            visited.add(n)
+            for m in CFG.predecessors(n):
+                if m not in visited:
+                    queue.append(m)
+
+    for n in nodes:
+        LiveOut[n] = set({})
+
+    changed = True
+    num_iter = 0
+    while changed:
+        num_iter += 1
+        changed = False
+        for n in nodes:
+            new_LiveOut = set({})
+            for m in get_node_successors(CFG, n):
+                if UEVar[m]:
+                    new_LiveOut.add(UEVar[m])
+                VarKillBar = VarDomain - set({VarKill[m]})
+                new_LiveOut = new_LiveOut.union(LiveOut[m].intersection(VarKillBar))
+            if new_LiveOut != LiveOut[n]:
+                LiveOut[n] = new_LiveOut
+                changed = True
+    print("#Iter = {}".format(num_iter))
+
     return LiveOut
+
+# NOTE: TEST RESULTS ON TRAVERSAL ORDER
+# 
+#              ___________________________ #ITERATIONS
+#             |       |        |     
+#             V       V        V     
+# +------+---------+-----+----------+
+# | TEST | default | rpo | rpo_rcfg |
+# +------+---------+-----+----------+
+# |   0  |    2    |  2  |     2    |
+# |   1  |    5    |  2  |     2    |
+# |   2  |    5    |  2  |     2    |
+# |   3  |    6    |  2  |     3    |
+# |   4  |    7    |  2  |     3    |
+# |   5  |    6    |  2  |     3    |
+# |   6  |    8    |  2  |     3    |
+# |   7  |    8    |  2  |     3    |
+# +------+---------+-----+----------+
+# 
+# NOTE: OBSERVATIONS
+#
+#    1. LiveOut propagates from the child to the parent, so it's better to from the bottom of the graph.
+#    2. The default order is not very representative because it can be any order except for the first node and the last node.
+#    3. The "rpo" or reverse post-order on CFG is the worst case because it follows the opposite direction of LiveOut propagation.
+#    4. The "rpo_rcfg" is the best order because LiveOut flows from the last node to the first.
+#    5. Ideally on a DAG the optimal #iter should be 2, but there are cases where 3 iterations are necessary.
+#       I think the extra iterations are due to loops, where LiveOut needs to be passed at least twice to reach stable states.
 
 # The uninitialized variables are the LiveOut variables from the start
 # node. It is fine if your implementation needs to change this

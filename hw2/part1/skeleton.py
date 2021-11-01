@@ -265,17 +265,18 @@ def replace_redundant_part3(input_block):
         op     = instr.op  # the operator; one of ('+', '-', '*', '/')
         op2    = instr.op2 # the seecond operand
 
-        # Sort op1 and op2 by numbers if the operator is commutative (+ or *)
         (op1, op2) = (op1, op2) if op1.get_number() < op2.get_number() or op not in ['+', '*'] else (op2, op1)
         signature = op1.pprint() + op + op2.pprint()
 
+        # Only replace the expression with the alias variable if the variable has not been overwritten
         if signature in signature_to_var and signature_to_var[signature].get_number() == name_to_number[signature_to_var[signature].get_name()]:
             replaced_instructions += 1
             return_block.add_instruction(AssignmentInstr(lhs, signature_to_var[signature]))
         else:
             return_block.add_instruction(instr)
             signature_to_var[signature] = lhs
-
+        
+        # Update "most recent" number table
         name_to_number[lhs.get_name()] = lhs.get_number()
         
     return return_block, replaced_instructions
@@ -312,6 +313,8 @@ def replace_redundant_part4(input_block):
 
     # Variable Name -> Most Recent Signature
     name_to_signature = {}
+
+    # Variable Name -> Most Recent Number
     name_to_number = {}
 
     for instr in input_block.instruction_list():
@@ -322,15 +325,10 @@ def replace_redundant_part4(input_block):
         op     = instr.op  # the operator; one of ('+', '-', '*', '/')
         op2    = instr.op2 # the seecond operand
 
-        # You can access names and numbers of the variables with, e.g.:
-        # op1.get_name()
-        # op1.get_number()
         (op1, op2) = (op1, op2) if op1.get_number() < op2.get_number() or op not in ['+', '*'] else (op2, op1)
         signature = op1.pprint() + op + op2.pprint()
 
-        # Determine if the instruction can be replaced, if not you
-        # should simply add the original instruction to the return_block
-        # you can create an assignment instruction with the constructor:        # new_instr = AssignmentInstr(lhs_variable, rhs_variable)       
+        # If the signature exists, replace it with any of the alias variable
         if len(signature_to_name_set[signature]):
             replaced_instructions += 1
             alias_name = next(iter(signature_to_name_set[signature]))
@@ -338,11 +336,16 @@ def replace_redundant_part4(input_block):
         else:
             return_block.add_instruction(instr)
         
+        # If the variable is overwritten, remove its previous alias expression
         if lhs.get_name() in name_to_signature:
             signature_to_name_set[name_to_signature[lhs.get_name()]].remove(lhs.get_name())
+        
+        # Different from part3, the signature-to-variable mapping is updated even after an instruction replacement.
+        signature_to_name_set[signature].add(lhs.get_name())
+
+        # Update "most recent" signature/number table
         name_to_signature[lhs.get_name()] = signature
         name_to_number[lhs.get_name()] = lhs.get_number()
-        signature_to_name_set[signature].add(lhs.get_name())
         
     return return_block, replaced_instructions
 
